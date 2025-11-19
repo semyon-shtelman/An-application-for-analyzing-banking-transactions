@@ -1,0 +1,44 @@
+[project]
+name = "pythonproject1"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Semyon Shtelman",email = "shtelmaan@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "pandas (>=2.3.3,<3.0.0)",
+    "openpyxl (>=3.1.5,<4.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.group.lint.dependencies]
+flake8 = "^7.3.0"
+black = "^25.11.0"
+isort = "^7.0.0"
+mypy = "^1.18.2"
+
+[tool.black]
+line-length = 119
+exclude = """
+(
+.git
+)
+"""
+[tool.isort]
+line_length = 119
+
+[tool.mypy]
+disallow_untyped_defs = true
+warm_return_any = true
+ignore_missing_imports = true
+exclude = """
+(
+venv
+)
+"""
