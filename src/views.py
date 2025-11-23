@@ -1,7 +1,8 @@
 import utils
 
-def generate_financial_report(time_str: str) -> dict:
-    """Главная функция - для генерации информации для страницы главная"""
+
+def generate_main_response(time_str: str) -> dict:
+    """Главная функция - для генерации данных для страницы главная"""
 
     # Загружаем dataframe из файла
     df = utils.load_transactions_excel("../data/operations.xlsx")
@@ -33,7 +34,3 @@ def generate_financial_report(time_str: str) -> dict:
     }
 
     return response
-
-
-test_time = "20.05.2020"
-print(generate_financial_report(test_time))
