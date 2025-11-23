@@ -4,6 +4,7 @@ from datetime import datetime
 import pandas as pd
 import requests
 
+
 def load_transactions_excel(excel_file_patch: str) -> pd.DataFrame | list:
     try:
         df = pd.read_excel(excel_file_patch)
@@ -80,12 +81,12 @@ def get_greeting() -> str:
 def get_filtering_df_by_date(df: pd.DataFrame, target_date: str) -> pd.DataFrame:
     """Фильтрует данные с начала месяца, на который выпадает входящая дата, по входящую дату."""
 
-    date_dt = pd.to_datetime(target_date, format="%d.%m.%Y")
+    formated_date = target_date.split()[0]
+    date_dt = pd.to_datetime(formated_date, format="%d-%m-%Y")
     start_of_month = date_dt.replace(day=1)
 
     filtered_df = df[pd.to_datetime(df["Дата платежа"], format="%d.%m.%Y").between(start_of_month, date_dt)]
     return filtered_df
-
 
 
 def get_currency_rates(currencies: list[str]) -> list:
