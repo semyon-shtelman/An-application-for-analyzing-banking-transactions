@@ -11,7 +11,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def get_profitable_categories_of_increased_cashback(data: pd.DataFrame, year: int, month: int) -> dict:
+def anylize_cashback(data: pd.DataFrame, year: int, month: int) -> dict:
     """Анализирует кешбэк по категориям за указанный месяц и год"""
     logger.info(f"Начало анализа кешбэка за {month}.{year}")
     logger.info(f"Размер входных данных: {len(data)} записей")
