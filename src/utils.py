@@ -108,15 +108,19 @@ def top_5_transactions_by_payment_amount(df: pd.DataFrame) -> list[dict]:
 def get_greeting() -> str:
     """Возвращает приветствие в зависимости от времени"""
     hour = datetime.now().hour
-    greetings = {(4, 12): "Доброе утро", (12, 18): "Добрый день", (18, 23): "Добрый вечер", (23, 4): "Доброй ночи"}
+    logger.info(f"Текущий час: {hour}")
 
-    for (start, end), greeting in greetings.items():
-        if start <= hour < end or (start > end and (hour >= start or hour < end)):
-            logger.info(f"Сгенерировано приветствие: '{greeting}' для часа: {hour}")
-            return greeting
+    if 4 <= hour < 12:
+        greeting = "Доброе утро"
+    elif 12 <= hour < 18:
+        greeting = "Добрый день"
+    elif 18 <= hour < 23:
+        greeting = "Добрый вечер"
+    else:
+        greeting = "Доброй ночи"
 
-    logger.warning(f"Не удалось определить приветствие для часа: {hour}")
-    return "Добрый день"
+    logger.info(f"Сгенерировано приветствие: '{greeting}'")
+    return greeting
 
 
 def get_filtering_df_by_date(df: pd.DataFrame, target_date: str) -> pd.DataFrame:
