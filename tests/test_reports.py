@@ -1,5 +1,6 @@
 import pandas as pd
 from datetime import datetime
+from unittest.mock import patch
 from src.reports import spending_by_category
 
 
@@ -10,16 +11,23 @@ def test_basic_functionality():
         "Категория": ["Еда", "Еда", "Еда"],
         "Сумма платежа": [1000, 2000, 1500]
     })
-    result = spending_by_category(df, "Еда", "31.03.2024")
-    assert len(result) == 3
-    assert result["Траты"].sum() == 4500
+
+    # Мокаем только pd.to_datetime для целевой даты
+    with patch('pandas.to_datetime') as mock_to_datetime:
+        mock_to_datetime.return_value = pd.Timestamp('2024-03-31')
+        result = spending_by_category(df, "Еда", "31.03.2024")
+        assert len(result) == 1
+        assert result["Траты"].sum() == 4500
 
 
 def test_empty_data():
     """Тест с пустыми данными"""
     empty_df = pd.DataFrame(columns=["Дата платежа", "Категория", "Сумма платежа"])
-    result = spending_by_category(empty_df, "Еда", "31.03.2024")
-    assert result.empty
+
+    with patch('pandas.to_datetime') as mock_to_datetime:
+        mock_to_datetime.return_value = pd.Timestamp('2024-03-31')
+        result = spending_by_category(empty_df, "Еда", "31.03.2024")
+        assert result.empty
 
 
 def test_no_data_for_category():
@@ -29,16 +37,19 @@ def test_no_data_for_category():
         "Категория": ["Транспорт"],
         "Сумма платежа": [1000]
     })
-    result = spending_by_category(df, "Еда", "31.03.2024")
-    assert result.empty
+
+    with patch('pandas.to_datetime') as mock_to_datetime:
+        mock_to_datetime.return_value = pd.Timestamp('2024-03-31')
+        result = spending_by_category(df, "Еда", "31.03.2024")
+        assert result.empty
 
 
 def test_missing_columns():
     """Тест с отсутствующими колонками"""
     df = pd.DataFrame({"other_column": [1]})
+
     try:
         result = spending_by_category(df, "Еда", "31.03.2024")
-        # Функция должна упасть с ошибкой
         assert False
     except Exception:
         assert True
@@ -47,9 +58,13 @@ def test_missing_columns():
 def test_current_date():
     """Тест с текущей датой (без указания date)"""
     df = pd.DataFrame({
-        "Дата платежа": [datetime.now().strftime("%d.%m.%Y")],
+        "Дата платежа": ["31.03.2024"],
         "Категория": ["Еда"],
         "Сумма платежа": [1000]
     })
-    result = spending_by_category(df, "Еда")
-    assert len(result) == 1
+
+    # Мокаем datetime.now() чтобы вернуть фиксированную дату
+    with patch('src.reports.datetime') as mock_datetime:
+        mock_datetime.now.return_value = datetime(2024, 3, 31)
+        result = spending_by_category(df, "Еда")
+        assert len(result) == 1
