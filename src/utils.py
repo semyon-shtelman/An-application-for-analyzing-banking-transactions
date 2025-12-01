@@ -1,9 +1,12 @@
+import os
 import json
 import logging
 from datetime import datetime
-
+from dotenv import load_dotenv
 import pandas as pd
 import requests
+
+load_dotenv()
 
 # Настройка логирования
 logging.basicConfig(
@@ -62,15 +65,22 @@ def get_cards_info(df: pd.DataFrame) -> list[dict]:
         logger.info("Нет транзакций с отрицательной суммой (расходов)")
         return []
 
+
     try:
-        cards = transactions.groupby(by="Номер карты").agg(
-            last_digits=("Номер карты", lambda x: str(x.iloc[0])[-4:]),
-            total_digits=("Сумма платежа", lambda x: round(abs(sum(x)), 2)),
-            cashback=("Сумма платежа", lambda x: abs(sum(x) // 100)),
-        )
-        cards_dict = cards.to_dict(orient="records")
-        logger.info(f"Рассчитана информация по {len(cards_dict)} картам")
-        return cards_dict
+        cards_info = []
+
+        for card_number, group in transactions.groupby("Номер карты"):
+            total_spent = abs(group["Сумма платежа"].sum())
+            total_spent_rounded = round(total_spent, 2)
+            cashback = round(total_spent / 100, 2)
+
+            cards_info.append({
+                "last_digits": card_number,
+                "total_spent": total_spent_rounded,
+                "cashback": cashback
+            })
+        logger.info(f"Рассчитана информация по {len(cards_info)} картам")
+        return cards_info
     except Exception as e:
         logger.error(f"Ошибка при расчете информации по картам: {e}")
         return []
@@ -132,11 +142,11 @@ def get_filtering_df_by_date(df: pd.DataFrame, target_date: str) -> pd.DataFrame
         return df
 
     try:
-        formated_date = target_date.split()[0]
-        date_dt = pd.to_datetime(formated_date, format="%d-%m-%Y")
+        date_dt = pd.to_datetime(target_date, format="%Y-%m-%d %H:%M:%S")
         start_of_month = date_dt.replace(day=1)
 
-        filtered_df = df[pd.to_datetime(df["Дата платежа"], format="%d.%m.%Y").between(start_of_month, date_dt)]
+        df_dates = pd.to_datetime(df["Дата платежа"], format="%d.%m.%Y")
+        filtered_df = df[df_dates.between(start_of_month, date_dt)]
         logger.info(f"Данные отфильтрованы. Записей до: {len(df)}, после: {len(filtered_df)}")
         return filtered_df
     except Exception as e:
@@ -164,7 +174,7 @@ def get_currency_rates(currencies: list[str]) -> list:
 
             rate = data.get("Valute", {}).get(currency, {}).get("Value")
             if rate:
-                currency_rates.append({"currency": currency, "rate": rate})
+                currency_rates.append({"currency": currency, "rate": round(float(rate), 2)})
                 logger.debug(f"Получен курс для {currency}: {rate}")
             else:
                 logger.warning(f"Курс для валюты {currency} не найден в ответе")
@@ -184,6 +194,7 @@ def get_stock_price_sp500(symbols: list[str]) -> list:
     """Получает цены акций из S&P500"""
     logger.info(f"Запрос цен акций: {symbols}")
 
+    api_key = os.getenv("API_KEY")
     url = "https://www.alphavantage.co/query"
     stock_prices = []
 
@@ -192,7 +203,7 @@ def get_stock_price_sp500(symbols: list[str]) -> list:
         return []
 
     for symbol in symbols:
-        params = {"function": "GLOBAL_QUOTE", "symbol": symbol, "apikey": "YOUR_API_KEY"}
+        params = {"function": "GLOBAL_QUOTE", "symbol": symbol, "apikey": api_key}
         try:
             logger.debug(f"Запрос цены для акции: {symbol}")
             response = requests.get(url, params=params, timeout=10)
@@ -201,7 +212,7 @@ def get_stock_price_sp500(symbols: list[str]) -> list:
 
             price = data.get("Global Quote", {}).get("05. price")
             if price:
-                stock_prices.append({"stock": symbol, "price": price})
+                stock_prices.append({"stock": symbol, "price": round(float(price), 2)})
                 logger.debug(f"Получена цена для {symbol}: {price}")
             else:
                 logger.warning(f"Цена для акции {symbol} не найдена в ответе")
