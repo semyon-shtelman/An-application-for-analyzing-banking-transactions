@@ -1,3 +1,4 @@
+import json
 from typing import Any
 
 from src.utils import (get_cards_info, get_currency_rates, get_filtering_df_by_date, get_greeting,
@@ -5,7 +6,7 @@ from src.utils import (get_cards_info, get_currency_rates, get_filtering_df_by_d
                        top_5_transactions_by_payment_amount)
 
 
-def generate_main_response(time_str: str) -> dict[str, Any]:
+def generate_main_response(time_str: str) -> str:
     """Главная функция - для генерации данных для страницы главная"""
 
     # Загружаем dataframe из файла
@@ -43,4 +44,4 @@ def generate_main_response(time_str: str) -> dict[str, Any]:
         "stock_prices": stock_prices,
     }
 
-    return response
+    return json.dumps(response, ensure_ascii=False, indent=4)
